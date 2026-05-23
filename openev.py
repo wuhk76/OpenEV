@@ -24,10 +24,11 @@ class Motor:
         self.motors['outputs'] = tuple(outputs)
         self.motors['signs'] = tuple(signs)
     def write(self, throttle, yaw):
-        throttle = max(-1, min(1, throttle))
-        yaw = max(-1, min(1, yaw))
-        throttle = throttle / 2
-        yaw = yaw / 2
+        a = 0.4
+        throttle = max(-a, min(a, throttle))
+        yaw = max(-a, min(a, yaw))
+        throttle = a * throttle
+        yaw = a * yaw
         dutya = max(-255, min(255, int((255 * (throttle + yaw)) // 1)))
         dutyb = max(-255, min(255, int((255 * (throttle - yaw)) // 1)))
         for a, b in self.motors.values():
@@ -201,11 +202,14 @@ def bluctl():
             if keyboard.is_pressed('down'):
                 throttle = -abs(throttle)
             if keyboard.is_pressed('left'):
-                yaw = -0.5
+                yaw = max(0.2, throttle)
             if keyboard.is_pressed('right'):
-                yaw = 0.5
+                yaw = -max(0.2, throttle)
             if throttle != prevthrottle or yaw != prevyaw:
                 motor.write(throttle, yaw)
+            if not (keyboard.is_pressed('up') or keyboard.is_pressed('down')):
+                motor.write(0, 0)
+                throttle = -throttle
             prevthrottle = throttle
             prevyaw = yaw
         except KeyboardInterrupt:
